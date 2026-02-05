@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Snakes & Ladders</title>
+    <style>
+        /* CORE RESET & BASE STYLES */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #eef2ff;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        /* TOP BAR */
+        header {
+            background: #ffffff;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .game-icon { background: #3b82f6; color: white; padding: 6px 10px; border-radius: 8px; font-weight: 900; }
+        .title { font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 0; }
+        .reset-icon { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; border-radius: 50%; }
+        .reset-icon:hover { background: #f1f5f9; }
+
+        /* MAIN AREA */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        /* SETUP SCREEN */
+        #setup-screen {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            padding: 24px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .setup-list { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .player-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 16px;
+            border: 2px solid #f1f5f9;
+        }
+        .avatar-select {
+            width: 60px;
+            height: 44px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        .player-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 700;
+            outline: none;
+            color: #334155;
+            min-width: 0;
+        }
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 900;
+            margin-right: 4px;
+        }
+        .badge-ai { background: #fef3c7; color: #b45309; }
+        .badge-human { background: #dcfce7; color: #166534; }
+        
+        .btn-del {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+        .btn-del:hover { color: #ef4444; }
+
+        .setup-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            padding: 12px;
+            border-radius: 12px;
+            color: #475569;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-start {
+            width: 100%;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 18px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-start:disabled {
+            background: #cbd5e1;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .validation-msg {
+            color: #ef4444;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 8px;
+            min-height: 1.2rem;
+        }
+
+        /* GAME BOARD AREA */
+        #game-screen { display: none; width: 100%; max-width: 550px; }
+        .board-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%; 
+            background: #fefce8; /* BOARD BACKGROUND PALE YELLOW */
+            border: 8px solid #3b82f6;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        #game-board {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+        }
+        .cell {
+            border: 0.1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px; /* NUMBERS SIZE */
+            font-weight: 900;
+            color: #64748b; /* DARKER NUMBERS */
+            position: relative;
+        }
+        
+        /* SPECIAL CELL COLORS */
+        .cell-100 { background: #7e22ce !important; color: white !important; font-size: 22px; }
+        .cell-ladder-start { background: #dcfce7 !important; } /* LIGHT GREEN */
+        .cell-snake-start { background: #fee2e2 !important; } /* LIGHT RED */
+
+        .sl-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* TOKENS */
+        .token {
+            position: absolute;
+            width: 8%;
+            height: 12%;
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+            z-index: 20;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .token-emoji {
+            font-size: 32px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        .token-name {
+            font-size: 9px;
+            font-weight: 900;
+            background: rgba(255,255,255,0.95);
+            padding: 1px 4px;
+            border-radius: 4px;
+            margin-top: 1px;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* STATUS BAR FOOTER */
+        footer {
+            display: none;
+            background: #ffffff;
+            padding: 24px 20px; /* INCREASED PADDING */
+            border-top: 2px solid #f1f5f9;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            z-index: 110;
+        }
+        .turn-display { display: flex; align-items: center; gap: 12px; }
+        .current-player-circle { 
+            width: 58px; height: 58px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 34px; background: #f8fafc; border: 4px solid #e2e8f0;
+        }
+        .player-label { font-size: 10px; font-weight: 900; color: #94a3b8; letter-spacing: 1px; }
+        .player-name { font-weight: 800; font-size: 1.1rem; color: #1e293b; }
+
+        /* INCREASED TAP AREA FOR ROLL BUTTON */
+        .btn-roll {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 28px 50px; /* BIGGER TAP AREA */
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .btn-roll:active { transform: scale(0.95); }
+        .btn-roll:disabled { background-color: #94a3b8; box-shadow: none; cursor: not-allowed; }
+
+        /* DICE ANIMATION */
+        #dice-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .dice-container {
+            background: white;
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            text-align: center;
+            border: 5px solid #3b82f6;
+        }
+        .dice-face { font-size: 80px; margin-bottom: 10px; display: inline-block; }
+        .dice-shaking { animation: shake 0.1s infinite; }
+        @keyframes shake {
+            0% { transform: translate(2px, 2px) rotate(0deg); }
+            25% { transform: translate(-2px, 1px) rotate(5deg); }
+            50% { transform: translate(-1px, -2px) rotate(0deg); }
+            75% { transform: translate(1px, 2px) rotate(-5deg); }
+            100% { transform: translate(2px, 1px) rotate(0deg); }
+        }
+
+        .hidden { display: none !important; }
+
+        .win-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .win-title { font-size: 3.5rem; font-weight: 900; margin-bottom: 10px; color: #fbbf24; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <div class="game-icon">S&L</div>
+            <h1 class="title">Snakes & Ladders</h1>
+        </div>
+        <button class="reset-icon" id="btn-reload" title="Restart Game">🔄</button>
+    </header>
+
+    <main>
+        <!-- SETUP -->
+        <div id="setup-screen">
+            <h2 style="margin-top:0; color:#1e293b;">Let's Play!</h2>
+            <div id="setup-list" class="setup-list">
+                <!-- Players added by script -->
+            </div>
+            
+            <div class="setup-actions">
+                <button id="btn-add-human" class="btn-secondary">+ Add Human</button>
+                <button id="btn-add-ai" class="btn-secondary">+ Add AI Player</button>
+            </div>
+
+            <button id="btn-start-game" class="btn-start">START GAME</button>
+            <div id="validation-msg" class="validation-msg"></div>
+        </div>
+
+        <!-- GAME BOARD -->
+        <div id="game-screen">
+            <div class="board-container">
+                <div id="game-board"></div>
+                <svg id="sl-canvas" class="sl-layer"></svg>
+                <div id="tokens-layer"></div>
+                
+                <div id="dice-overlay">
+                    <div class="dice-container">
+                        <div id="dice-visual" class="dice-face">🎲</div>
+                        <div id="dice-msg" style="font-weight: 900; color: #3b82f6; font-size: 1.2rem;">ROLLING...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="game-footer">
+        <div class="turn-display">
+            <div id="status-icon" class="current-player-circle">👤</div>
+            <div>
+                <div class="player-label">WHO'S NEXT?</div>
+                <div id="status-name" class="player-name">Player Name</div>
+            </div>
+        </div>
+        <button id="btn-roll" class="btn-roll">ROLL DICE</button>
+    </footer>
+
+    <div id="win-overlay" class="win-overlay">
+        <div style="font-size: 100px;">🏆</div>
+        <div id="win-text" class="win-title">Adit Wins!</div>
+        <button class="btn-start" style="width: 250px; margin-top: 30px;" onclick="location.reload()">NEW GAME</button>
+    </div>
+
+    <script>
+        const EMOJIS = ['🦁', '🦊', '🐼', '🐨', '🐸', '🦄', '🦖', '🐱', '🐶', '🐯', '🐵', '🐷', '🐧', '🦉', '🐝', '🐢', '🐙', '👾', '🚀', '🌈'];
+        const AI_NAMES = ['Tom', 'Amy', 'Sam', 'Ziggy', 'Pixel', 'Turbo', 'Ace', 'Spark', 'Misty', 'Bo', 'Rocky', 'Luna'];
+        const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+        const DICE_CHARS = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+        
+        // CLASSIC CONFIGURATION
+        const LADDERS = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
+        const SNAKES = { 17: 7, 54: 34, 62: 18, 64: 60, 87: 24, 93: 73 };
+
+        let players = [];
+        let currentPlayerIndex = 0;
+        let isMoving = false;
+
+        // --- SETUP SCREEN LOGIC ---
+
+        function addPlayerRow(type, defaultName) {
+            const list = document.getElementById('setup-list');
+            if (list.children.length >= 5) return;
+
+            const div = document.createElement('div');
+            div.className = 'player-row';
+            div.dataset.type = type;
+
+            const emojiSelect = document.createElement('select');
+            emojiSelect.className = 'avatar-select';
+            
+            // Randomize emoji on creation
+            const startEmojiIndex = Math.floor(Math.random() * EMOJIS.length);
+            
+            EMOJIS.forEach((emoji, idx) => {
+                const opt = document.createElement('option');
+                opt.value = emoji;
+                opt.textContent = emoji;
+                if (idx === startEmojiIndex) opt.selected = true;
+                emojiSelect.appendChild(opt);
+            });
+
+            const badge = document.createElement('span');
+            badge.className = `badge badge-${type}`;
+            badge.textContent = type.toUpperCase();
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'player-input';
+            
+            // Handle AI Name generation
+            if (type === 'ai' && !defaultName) {
+                const randomName = AI_NAMES[Math.floor(Math.random() * AI_NAMES.length)];
+                input.value = `AI-${randomName}`;
+            } else {
+                input.value = defaultName || '';
+            }
+            
+            input.placeholder = "Name";
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn-del';
+            delBtn.innerHTML = '&times;';
+            delBtn.onclick = () => {
+                div.remove();
+                validateSetup();
+            };
+
+            div.appendChild(emojiSelect);
+            div.appendChild(badge);
+            div.appendChild(input);
+            div.appendChild(delBtn);
+            list.appendChild(div);
+
+            validateSetup();
+        }
+
+        function validateSetup() {
+            const list = document.getElementById('setup-list');
+            const startBtn = document.getElementById('btn-start-game');
+            const msg = document.getElementById('validation-msg');
+            const count = list.children.length;
+
+            if (count < 2) {
+                startBtn.disabled = true;
+                msg.textContent = "Please add at least 2 players to start!";
+            } else {
+                startBtn.disabled = false;
+                msg.textContent = "";
+            }
+
+            document.getElementById('btn-add-human').disabled = count >= 5;
+            document.getElementById('btn-add-ai').disabled = count >= 5;
+        }
+
+        document.getElementById('btn-add-human').onclick = () => addPlayerRow('human', `Player ${document.getElementById('setup-list').children.length + 1}`);
+        document.getElementById('btn-add-ai').onclick = () => addPlayerRow('ai');
+
+        // Initialize Defaults
+        addPlayerRow('human', 'Adit');
+        addPlayerRow('ai');
+
+        // --- GAME LOGIC ---
+
+        function generateBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+            for (let r = 9; r >= 0; r--) {
+                const isEvenRow = r % 2 === 0;
+                for (let c = 0; c < 10; c++) {
+                    const col = isEvenRow ? c : (9 - c);
+                    const num = (r * 10) + col + 1;
+                    const cell = document.createElement('div');
+                    
+                    // Style determination
+                    let extraClass = '';
+                    if (num === 100) extraClass = 'cell-100';
+                    else if (LADDERS[num]) extraClass = 'cell-ladder-start';
+                    else if (SNAKES[num]) extraClass = 'cell-snake-start';
+                    
+                    cell.className = `cell ${extraClass}`;
+                    cell.id = `c${num}`;
+                    cell.textContent = num;
+                    board.appendChild(cell);
+                }
+            }
+            setTimeout(drawSnakesAndLadders, 200);
+        }
+
+        function getCellData(num) {
+            const cell = document.getElementById('c' + num);
+            const board = document.getElementById('game-board');
+            if (!cell || !board) return null;
+            const cRect = cell.getBoundingClientRect();
+            const bRect = board.getBoundingClientRect();
+            return {
+                x: (cRect.left - bRect.left) + cRect.width / 2,
+                y: (cRect.top - bRect.top) + cRect.height / 2,
+                left: cRect.left - bRect.left,
+                top: cRect.top - bRect.top,
+                w: cRect.width,
+                h: cRect.height
+            };
+        }
+
+        function drawSnakesAndLadders() {
+            const svg = document.getElementById('sl-canvas');
+            const board = document.getElementById('game-board');
+            if (!board) return;
+            svg.setAttribute('width', board.offsetWidth);
+            svg.setAttribute('height', board.offsetHeight);
+            svg.innerHTML = '';
+
+            const createSVGElement = (tag) => document.createElementNS("http://www.w3.org/2000/svg", tag);
+
+            // LADDERS
+            for (let [s, e] of Object.entries(LADDERS)) {
+                const start = getCellData(s);
+                const end = getCellData(e);
+                if (!start || !end) continue;
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const len = Math.sqrt(dx*dx + dy*dy);
+                const angle = Math.atan2(dy, dx);
+                const px = -Math.sin(angle) * 8;
+                const py = Math.cos(angle) * 8;
+
+                const rail1 = createSVGElement("line");
+                rail1.setAttribute("x1", start.x + px); rail1.setAttribute("y1", start.y + py);
+                rail1.setAttribute("x2", end.x + px); rail1.setAttribute("y2", end.y + py);
+                rail1.setAttribute("stroke", "#8b4513"); rail1.setAttribute("stroke-width", "4");
+                svg.appendChild(rail1);
+
+                const rail2 = createSVGElement("line");
+                rail2.setAttribute("x1", start.x - px); rail2.setAttribute("y1", start.y - py);
+                rail2.setAttribute("x2", end.x - px); rail2.setAttribute("y2", end.y - py);
+                rail2.setAttribute("stroke", "#8b4513"); rail2.setAttribute("stroke-width", "4");
+                svg.appendChild(rail2);
+
+                const rungCount = Math.floor(len / 15);
+                for (let i = 1; i < rungCount; i++) {
+                    const t = i / rungCount;
+                    const rx = start.x + dx * t;
+                    const ry = start.y + dy * t;
+                    const rung = createSVGElement("line");
+                    rung.setAttribute("x1", rx + px); rung.setAttribute("y1", ry + py);
+                    rung.setAttribute("x2", rx - px); rung.setAttribute("y2", ry - py);
+                    rung.setAttribute("stroke", "#8b4513"); rung.setAttribute("stroke-width", "3");
+                    svg.appendChild(rung);
+                }
+            }
+
+            // SNAKES
+            for (let [s, e] of Object.entries(SNAKES)) {
+                const headPos = getCellData(s);
+                const tailPos = getCellData(e);
+                if (!headPos || !tailPos) continue;
+                const mx = (headPos.x + tailPos.x) / 2 + (Math.random() * 60 - 30);
+                const my = (headPos.y + tailPos.y) / 2;
+
+                const body = createSVGElement("path");
+                body.setAttribute("d", `M ${headPos.x} ${headPos.y} Q ${mx} ${my} ${tailPos.x} ${tailPos.y}`);
+                body.setAttribute("stroke", "#228b22");
+                body.setAttribute("stroke-width", "12");
+                body.setAttribute("fill", "none");
+                body.setAttribute("stroke-linecap", "round");
+                svg.appendChild(body);
+
+                const head = createSVGElement("circle");
+                head.setAttribute("cx", headPos.x); head.setAttribute("cy", headPos.y);
+                head.setAttribute("r", "10"); head.setAttribute("fill", "#228b22");
+                svg.appendChild(head);
+
+                const eye1 = createSVGElement("circle");
+                eye1.setAttribute("cx", headPos.x - 4); eye1.setAttribute("cy", headPos.y - 2);
+                eye1.setAttribute("r", "2"); eye1.setAttribute("fill", "white");
+                svg.appendChild(eye1);
+
+                const eye2 = createSVGElement("circle");
+                eye2.setAttribute("cx", headPos.x + 4); eye2.setAttribute("cy", headPos.y - 2);
+                eye2.setAttribute("r", "2"); eye2.setAttribute("fill", "white");
+                svg.appendChild(eye2);
+
+                const tongue = createSVGElement("line");
+                tongue.setAttribute("x1", headPos.x); tongue.setAttribute("y1", headPos.y - 8);
+                tongue.setAttribute("x2", headPos.x); tongue.setAttribute("y2", headPos.y - 14);
+                tongue.setAttribute("stroke", "red"); tongue.setAttribute("stroke-width", "2");
+                svg.appendChild(tongue);
+            }
+        }
+
+        document.getElementById('btn-start-game').onclick = () => {
+            const rows = document.querySelectorAll('.player-row');
+            players = Array.from(rows).map((row, i) => ({
+                name: row.querySelector('.player-input').value || `Player ${i+1}`,
+                avatar: row.querySelector('.avatar-select').value,
+                type: row.dataset.type,
+                pos: 1,
+                color: COLORS[i % COLORS.length]
+            }));
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('game-footer').style.display = 'flex';
+            
+            generateBoard();
+            
+            const layer = document.getElementById('tokens-layer');
+            layer.innerHTML = '';
+            players.forEach((p, i) => {
+                const token = document.createElement('div');
+                token.id = `p${i}`;
+                token.className = 'token';
+                token.innerHTML = `<span class="token-emoji">${p.avatar}</span><span class="token-name">${p.name}</span>`;
+                layer.appendChild(token);
+            });
+            
+            currentPlayerIndex = 0;
+            updateStatusUI();
+            updateTokenPositions();
+            checkAITurn();
+        };
+
+        function updateStatusUI() {
+            const p = players[currentPlayerIndex];
+            const btnRoll = document.getElementById('btn-roll');
+            
+            document.getElementById('status-icon').textContent = p.avatar;
+            document.getElementById('status-icon').style.borderColor = p.color;
+            document.getElementById('status-name').textContent = p.name;
+            document.getElementById('status-name').style.color = p.color;
+
+            // Visual feedback for AI turn
+            if (p.type === 'ai') {
+                btnRoll.disabled = true;
+                btnRoll.textContent = "AI THINKING...";
+            } else {
+                btnRoll.disabled = false;
+                btnRoll.textContent = "ROLL DICE";
+            }
+        }
+
+        function updateTokenPositions() {
+            players.forEach((p, i) => {
+                const data = getCellData(p.pos);
+                if (!data) return;
+                const t = document.getElementById(`p${i}`);
+                const overlapOffset = i * 4; 
+                t.style.left = (data.left + overlapOffset) + 'px';
+                t.style.top = (data.top - 12 + overlapOffset) + 'px';
+            });
+        }
+
+        async function rollDice() {
+            if (isMoving) return;
+            isMoving = true;
+            
+            const overlay = document.getElementById('dice-overlay');
+            const visual = document.getElementById('dice-visual');
+            const msg = document.getElementById('dice-msg');
+            
+            overlay.style.display = 'flex';
+            visual.classList.add('dice-shaking');
+            visual.textContent = '🎲';
+            msg.textContent = players[currentPlayerIndex].name + " is rolling...";
+            
+            const roll = Math.floor(Math.random() * 6) + 1;
+            
+            await new Promise(r => setTimeout(r, 1000));
+            
+            visual.classList.remove('dice-shaking');
+            visual.textContent = DICE_CHARS[roll - 1];
+            msg.textContent = `${players[currentPlayerIndex].name} got ${roll}!`;
+            
+            await new Promise(r => setTimeout(r, 1500));
+            overlay.style.display = 'none';
+            
+            await movePlayerSequence(roll);
+        }
+
+        document.getElementById('btn-roll').onclick = rollDice;
+
+        async function movePlayerSequence(steps) {
+            const p = players[currentPlayerIndex];
+            
+            for (let i = 0; i < steps; i++) {
+                if (p.pos < 100) {
+                    p.pos++;
+                    updateTokenPositions();
+                    await new Promise(r => setTimeout(r, 300));
+                }
+            }
+
+            let jumped = false;
+            if (LADDERS[p.pos]) {
+                await new Promise(r => setTimeout(r, 500));
+                p.pos = LADDERS[p.pos];
+                jumped = true;
+            } else if (SNAKES[p.pos]) {
+                await new Promise(r => setTimeout(r, 500));
+                p.pos = SNAKES[p.pos];
+                jumped = true;
+            }
+
+            if (jumped) {
+                updateTokenPositions();
+                await new Promise(r => setTimeout(r, 600));
+            }
+
+            if (p.pos === 100) {
+                document.getElementById('win-text').textContent = `${p.name} Wins!`;
+                document.getElementById('win-overlay').style.display = 'flex';
+            } else {
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                updateStatusUI();
+                isMoving = false;
+                checkAITurn();
+            }
+        }
+
+        function checkAITurn() {
+            const p = players[currentPlayerIndex];
+            if (p.type === 'ai' && !isMoving) {
+                setTimeout(rollDice, 1800); // Wait after previous turn ends
+            }
+        }
+
+        document.getElementById('btn-reload').onclick = () => location.reload();
+        window.onresize = () => {
+            if (players.length > 0) {
+                drawSnakesAndLadders();
+                updateTokenPositions();
+            }
+        };
+    </script>
+</body>
+</html>
