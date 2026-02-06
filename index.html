@@ -16,19 +16,22 @@
             color: #1e293b;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             user-select: none;
         }
 
         /* TOP BAR */
         header {
             background: #ffffff;
-            padding: 12px 20px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            z-index: 100;
+            z-index: 200;
+            flex-shrink: 0;
         }
         .header-left { display: flex; align-items: center; gap: 10px; }
         .game-icon { background: #3b82f6; color: white; padding: 6px 10px; border-radius: 8px; font-weight: 900; }
@@ -42,7 +45,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 15px;
+            position: relative;
+            overflow: hidden;
         }
 
         /* SETUP SCREEN */
@@ -54,6 +58,7 @@
             border-radius: 24px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             text-align: center;
+            z-index: 300;
         }
         .setup-list { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
         .player-row {
@@ -73,7 +78,6 @@
             background: white;
             font-size: 20px;
             cursor: pointer;
-            padding: 2px;
         }
         .player-input {
             flex: 1;
@@ -103,7 +107,6 @@
             font-size: 18px;
             padding: 5px;
         }
-        .btn-del:hover { color: #ef4444; }
 
         .setup-actions {
             display: grid;
@@ -132,33 +135,41 @@
             font-weight: 900;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s;
         }
-        .btn-start:disabled {
-            background: #cbd5e1;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-        .validation-msg {
-            color: #ef4444;
-            font-size: 0.8rem;
-            font-weight: 700;
-            margin-top: 8px;
-            min-height: 1.2rem;
-        }
+        .btn-start:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+        .validation-msg { color: #ef4444; font-size: 0.8rem; font-weight: 700; margin-top: 8px; }
 
         /* GAME BOARD AREA */
-        #game-screen { display: none; width: 100%; max-width: 550px; }
+        #game-screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        
+        /* Central Status Indicator */
+        .status-banner {
+            background: white;
+            padding: 10px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+            z-index: 100;
+        }
+        .status-icon { font-size: 24px; }
+        .status-text { font-weight: 800; font-size: 1.1rem; }
+
         .board-container {
             position: relative;
-            width: 100%;
-            padding-top: 100%; 
-            background: #fefce8; /* BOARD BACKGROUND PALE YELLOW */
-            border: 8px solid #3b82f6;
+            /* Scale reduced to prevent overlap with corner buttons */
+            --board-size: min(70vw, 70vh, 700px);
+            width: var(--board-size);
+            height: var(--board-size);
+            background: #fefce8;
+            border: 5px solid #000000;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
+            z-index: 10;
         }
         #game-board {
             position: absolute;
@@ -168,20 +179,19 @@
             grid-template-rows: repeat(10, 1fr);
         }
         .cell {
-            border: 0.1px solid #e2e8f0;
+            border: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px; /* NUMBERS SIZE */
+            font-size: 24px;
             font-weight: 900;
-            color: #64748b; /* DARKER NUMBERS */
+            color: #475569;
             position: relative;
         }
-        
-        /* SPECIAL CELL COLORS */
-        .cell-100 { background: #7e22ce !important; color: white !important; font-size: 22px; }
-        .cell-ladder-start { background: #dcfce7 !important; } /* LIGHT GREEN */
-        .cell-snake-start { background: #fee2e2 !important; } /* LIGHT RED */
+        .cell:nth-child(even) { background: #fdfae1; }
+        .cell-100 { background: #7e22ce !important; color: white !important; font-size: 28px; }
+        .cell-ladder-start { background: #dcfce7 !important; }
+        .cell-snake-start { background: #fee2e2 !important; }
 
         .sl-layer {
             position: absolute;
@@ -203,62 +213,67 @@
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
         }
-        .token-emoji {
-            font-size: 32px;
-            line-height: 1;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-        }
+        .token-emoji { font-size: 40px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
         .token-name {
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 900;
-            background: rgba(255,255,255,0.95);
-            padding: 1px 4px;
-            border-radius: 4px;
-            margin-top: 1px;
+            background: rgba(255,255,255,0.9);
+            padding: 2px 6px;
+            border-radius: 6px;
+            margin-top: 2px;
             white-space: nowrap;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             color: #1e293b;
             border: 1px solid #e2e8f0;
         }
 
-        /* STATUS BAR FOOTER */
-        footer {
-            display: none;
-            background: #ffffff;
-            padding: 24px 20px; /* INCREASED PADDING */
-            border-top: 2px solid #f1f5f9;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            bottom: 0;
-            z-index: 110;
-        }
-        .turn-display { display: flex; align-items: center; gap: 12px; }
-        .current-player-circle { 
-            width: 58px; height: 58px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 34px; background: #f8fafc; border: 4px solid #e2e8f0;
-        }
-        .player-label { font-size: 10px; font-weight: 900; color: #94a3b8; letter-spacing: 1px; }
-        .player-name { font-weight: 800; font-size: 1.1rem; color: #1e293b; }
-
-        /* INCREASED TAP AREA FOR ROLL BUTTON */
-        .btn-roll {
-            background: #2563eb;
-            color: white;
+        /* CORNER CONTROLS */
+        .corner-btn {
+            position: fixed;
+            width: 200px;
+            height: 110px;
+            padding: 12px;
+            border-radius: 25px;
             border: none;
-            padding: 28px 50px; /* BIGGER TAP AREA */
-            border-radius: 20px;
-            font-weight: 900;
-            font-size: 1.5rem;
+            background: #ffffff;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-            transition: transform 0.1s, background-color 0.2s;
+            z-index: 50;
+            transition: all 0.2s;
         }
-        .btn-roll:active { transform: scale(0.95); }
-        .btn-roll:disabled { background-color: #94a3b8; box-shadow: none; cursor: not-allowed; }
+        .corner-btn:active { transform: scale(0.92); }
+        .corner-btn.active { 
+            background: #2563eb; 
+            color: white; 
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5);
+            animation: pulse-border 1.5s infinite;
+        }
+        /* ENHANCED DISABLED STATE VISIBILITY */
+        .corner-btn:disabled { 
+            opacity: 1; 
+            cursor: not-allowed; 
+            background: #64748b; /* DARK GRAY FOR BETTER VISIBILITY */
+            color: #ffffff; /* WHITE TEXT */
+        }
+        .corner-btn .p-label { font-size: 11px; font-weight: 900; opacity: 0.9; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .corner-btn .p-name { font-size: 15px; font-weight: 800; line-height: 1.2; text-align: center; }
 
-        /* DICE ANIMATION */
+        @keyframes pulse-border {
+            0% { box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5); }
+            50% { box-shadow: 0 10px 50px rgba(37, 99, 235, 0.8); }
+            100% { box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5); }
+        }
+
+        /* Corner Positions Adjusted to avoid Header Overlap */
+        .pos-0 { bottom: 25px; left: 25px; }
+        .pos-1 { bottom: 25px; right: 25px; }
+        .pos-2 { top: 100px; right: 25px; } /* MOVED DOWN */
+        .pos-3 { top: 100px; left: 25px; }  /* MOVED DOWN */
+
+        /* DICE OVERLAY */
         #dice-overlay {
             position: absolute;
             inset: 0;
@@ -267,17 +282,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 50;
+            z-index: 500;
         }
         .dice-container {
             background: white;
-            padding: 30px;
-            border-radius: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            padding: 40px;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
             text-align: center;
-            border: 5px solid #3b82f6;
+            border: 8px solid #000;
         }
-        .dice-face { font-size: 80px; margin-bottom: 10px; display: inline-block; }
+        .dice-face { font-size: 100px; margin-bottom: 15px; }
         .dice-shaking { animation: shake 0.1s infinite; }
         @keyframes shake {
             0% { transform: translate(2px, 2px) rotate(0deg); }
@@ -287,13 +302,11 @@
             100% { transform: translate(2px, 1px) rotate(0deg); }
         }
 
-        .hidden { display: none !important; }
-
         .win-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 200;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
             display: none;
             flex-direction: column;
             align-items: center;
@@ -302,7 +315,9 @@
             text-align: center;
             padding: 20px;
         }
-        .win-title { font-size: 3.5rem; font-weight: 900; margin-bottom: 10px; color: #fbbf24; }
+        .win-title { font-size: 4rem; font-weight: 900; margin-bottom: 20px; color: #fbbf24; }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -319,9 +334,7 @@
         <!-- SETUP -->
         <div id="setup-screen">
             <h2 style="margin-top:0; color:#1e293b;">Let's Play!</h2>
-            <div id="setup-list" class="setup-list">
-                <!-- Players added by script -->
-            </div>
+            <div id="setup-list" class="setup-list"></div>
             
             <div class="setup-actions">
                 <button id="btn-add-human" class="btn-secondary">+ Add Human</button>
@@ -332,8 +345,14 @@
             <div id="validation-msg" class="validation-msg"></div>
         </div>
 
-        <!-- GAME BOARD -->
+        <!-- GAME BOARD AREA -->
         <div id="game-screen">
+            <!-- Turn Indicator Bar -->
+            <div id="current-turn-banner" class="status-banner">
+                <span id="turn-banner-icon" class="status-icon">🦖</span>
+                <span id="turn-banner-text" class="status-text">Adit's Turn</span>
+            </div>
+
             <div class="board-container">
                 <div id="game-board"></div>
                 <svg id="sl-canvas" class="sl-layer"></svg>
@@ -342,39 +361,32 @@
                 <div id="dice-overlay">
                     <div class="dice-container">
                         <div id="dice-visual" class="dice-face">🎲</div>
-                        <div id="dice-msg" style="font-weight: 900; color: #3b82f6; font-size: 1.2rem;">ROLLING...</div>
+                        <div id="dice-msg" style="font-weight: 900; color: #3b82f6; font-size: 1.5rem;">ROLLING...</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Corner Buttons -->
+            <button id="roll-btn-0" class="corner-btn pos-0"><div class="p-label">PLAYER 1</div><div class="p-name">ROLL DICE</div></button>
+            <button id="roll-btn-1" class="corner-btn pos-1"><div class="p-label">PLAYER 2</div><div class="p-name">ROLL DICE</div></button>
+            <button id="roll-btn-2" class="corner-btn pos-2"><div class="p-label">PLAYER 3</div><div class="p-name">ROLL DICE</div></button>
+            <button id="roll-btn-3" class="corner-btn pos-3"><div class="p-label">PLAYER 4</div><div class="p-name">ROLL DICE</div></button>
         </div>
     </main>
 
-    <footer id="game-footer">
-        <div class="turn-display">
-            <div id="status-icon" class="current-player-circle">👤</div>
-            <div>
-                <div class="player-label">WHO'S NEXT?</div>
-                <div id="status-name" class="player-name">Player Name</div>
-            </div>
-        </div>
-        <button id="btn-roll" class="btn-roll">ROLL DICE</button>
-    </footer>
-
     <div id="win-overlay" class="win-overlay">
-        <div style="font-size: 100px;">🏆</div>
+        <div style="font-size: 120px;">🎉🏆🎉</div>
         <div id="win-text" class="win-title">Adit Wins!</div>
-        <button class="btn-start" style="width: 250px; margin-top: 30px;" onclick="location.reload()">NEW GAME</button>
+        <button class="btn-start" style="width: 300px; margin-top: 30px;" onclick="location.reload()">NEW GAME</button>
     </div>
 
     <script>
-        const EMOJIS = ['🦁', '🦊', '🐼', '🐨', '🐸', '🦄', '🦖', '🐱', '🐶', '🐯', '🐵', '🐷', '🐧', '🦉', '🐝', '🐢', '🐙', '👾', '🚀', '🌈'];
+        const EMOJIS = ['🦖', '🦁', '🦊', '🐼', '🐨', '🐸', '🦄', '🐱', '🐶', '🐯', '🐵', '🐷', '🐧', '🦉', '🐝', '🐢', '🐙', '👾', '🚀', '🌈'];
         const AI_NAMES = ['Tom', 'Amy', 'Sam', 'Ziggy', 'Pixel', 'Turbo', 'Ace', 'Spark', 'Misty', 'Bo', 'Rocky', 'Luna'];
-        const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
         const DICE_CHARS = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
         
-        // CLASSIC CONFIGURATION
-        const LADDERS = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
-        const SNAKES = { 17: 7, 54: 34, 62: 18, 64: 60, 87: 24, 93: 73 };
+        const LADDERS = { 4: 14, 9: 31, 20: 38, 28: 76, 40: 59, 51: 67, 63: 81, 71: 91 };
+        const SNAKES = { 17: 7, 54: 34, 62: 18, 64: 60, 87: 24, 93: 73, 98: 56 };
 
         let players = [];
         let currentPlayerIndex = 0;
@@ -382,9 +394,9 @@
 
         // --- SETUP SCREEN LOGIC ---
 
-        function addPlayerRow(type, defaultName) {
+        function addPlayerRow(type, defaultName, defaultEmoji) {
             const list = document.getElementById('setup-list');
-            if (list.children.length >= 5) return;
+            if (list.children.length >= 4) return;
 
             const div = document.createElement('div');
             div.className = 'player-row';
@@ -392,15 +404,11 @@
 
             const emojiSelect = document.createElement('select');
             emojiSelect.className = 'avatar-select';
-            
-            // Randomize emoji on creation
-            const startEmojiIndex = Math.floor(Math.random() * EMOJIS.length);
-            
-            EMOJIS.forEach((emoji, idx) => {
+            const startEmoji = defaultEmoji || EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+            EMOJIS.forEach((emoji) => {
                 const opt = document.createElement('option');
-                opt.value = emoji;
-                opt.textContent = emoji;
-                if (idx === startEmojiIndex) opt.selected = true;
+                opt.value = emoji; opt.textContent = emoji;
+                if (emoji === startEmoji) opt.selected = true;
                 emojiSelect.appendChild(opt);
             });
 
@@ -409,33 +417,25 @@
             badge.textContent = type.toUpperCase();
 
             const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'player-input';
+            input.type = 'text'; input.className = 'player-input';
             
-            // Handle AI Name generation
-            if (type === 'ai' && !defaultName) {
-                const randomName = AI_NAMES[Math.floor(Math.random() * AI_NAMES.length)];
-                input.value = `AI-${randomName}`;
+            if (!defaultName) {
+                if (type === 'ai') {
+                    input.value = `AI-${AI_NAMES[Math.floor(Math.random() * AI_NAMES.length)]}`;
+                } else {
+                    const humanCount = Array.from(list.children).filter(r => r.dataset.type === 'human').length + 1;
+                    input.value = `Player ${humanCount}`;
+                }
             } else {
-                input.value = defaultName || '';
+                input.value = defaultName;
             }
-            
-            input.placeholder = "Name";
 
             const delBtn = document.createElement('button');
-            delBtn.className = 'btn-del';
-            delBtn.innerHTML = '&times;';
-            delBtn.onclick = () => {
-                div.remove();
-                validateSetup();
-            };
+            delBtn.className = 'btn-del'; delBtn.innerHTML = '&times;';
+            delBtn.onclick = () => { div.remove(); validateSetup(); };
 
-            div.appendChild(emojiSelect);
-            div.appendChild(badge);
-            div.appendChild(input);
-            div.appendChild(delBtn);
+            div.appendChild(emojiSelect); div.appendChild(badge); div.appendChild(input); div.appendChild(delBtn);
             list.appendChild(div);
-
             validateSetup();
         }
 
@@ -444,24 +444,16 @@
             const startBtn = document.getElementById('btn-start-game');
             const msg = document.getElementById('validation-msg');
             const count = list.children.length;
-
-            if (count < 2) {
-                startBtn.disabled = true;
-                msg.textContent = "Please add at least 2 players to start!";
-            } else {
-                startBtn.disabled = false;
-                msg.textContent = "";
-            }
-
-            document.getElementById('btn-add-human').disabled = count >= 5;
-            document.getElementById('btn-add-ai').disabled = count >= 5;
+            startBtn.disabled = count < 2;
+            msg.textContent = count < 2 ? "Add at least 2 players!" : "";
+            document.getElementById('btn-add-human').disabled = count >= 4;
+            document.getElementById('btn-add-ai').disabled = count >= 4;
         }
 
-        document.getElementById('btn-add-human').onclick = () => addPlayerRow('human', `Player ${document.getElementById('setup-list').children.length + 1}`);
+        document.getElementById('btn-add-human').onclick = () => addPlayerRow('human');
         document.getElementById('btn-add-ai').onclick = () => addPlayerRow('ai');
 
-        // Initialize Defaults
-        addPlayerRow('human', 'Adit');
+        addPlayerRow('human', 'Adit', '🦖');
         addPlayerRow('ai');
 
         // --- GAME LOGIC ---
@@ -475,20 +467,17 @@
                     const col = isEvenRow ? c : (9 - c);
                     const num = (r * 10) + col + 1;
                     const cell = document.createElement('div');
-                    
-                    // Style determination
                     let extraClass = '';
                     if (num === 100) extraClass = 'cell-100';
                     else if (LADDERS[num]) extraClass = 'cell-ladder-start';
                     else if (SNAKES[num]) extraClass = 'cell-snake-start';
-                    
                     cell.className = `cell ${extraClass}`;
                     cell.id = `c${num}`;
                     cell.textContent = num;
                     board.appendChild(cell);
                 }
             }
-            setTimeout(drawSnakesAndLadders, 200);
+            setTimeout(drawGraphics, 200);
         }
 
         function getCellData(num) {
@@ -502,12 +491,11 @@
                 y: (cRect.top - bRect.top) + cRect.height / 2,
                 left: cRect.left - bRect.left,
                 top: cRect.top - bRect.top,
-                w: cRect.width,
-                h: cRect.height
+                w: cRect.width, h: cRect.height
             };
         }
 
-        function drawSnakesAndLadders() {
+        function drawGraphics() {
             const svg = document.getElementById('sl-canvas');
             const board = document.getElementById('game-board');
             if (!board) return;
@@ -515,81 +503,54 @@
             svg.setAttribute('height', board.offsetHeight);
             svg.innerHTML = '';
 
-            const createSVGElement = (tag) => document.createElementNS("http://www.w3.org/2000/svg", tag);
+            const createSVG = (tag) => document.createElementNS("http://www.w3.org/2000/svg", tag);
 
-            // LADDERS
             for (let [s, e] of Object.entries(LADDERS)) {
-                const start = getCellData(s);
-                const end = getCellData(e);
+                const start = getCellData(s); const end = getCellData(e);
                 if (!start || !end) continue;
-                const dx = end.x - start.x;
-                const dy = end.y - start.y;
-                const len = Math.sqrt(dx*dx + dy*dy);
+                const dx = end.x - start.x; const dy = end.y - start.y;
                 const angle = Math.atan2(dy, dx);
-                const px = -Math.sin(angle) * 8;
-                const py = Math.cos(angle) * 8;
-
-                const rail1 = createSVGElement("line");
-                rail1.setAttribute("x1", start.x + px); rail1.setAttribute("y1", start.y + py);
-                rail1.setAttribute("x2", end.x + px); rail1.setAttribute("y2", end.y + py);
-                rail1.setAttribute("stroke", "#8b4513"); rail1.setAttribute("stroke-width", "4");
-                svg.appendChild(rail1);
-
-                const rail2 = createSVGElement("line");
-                rail2.setAttribute("x1", start.x - px); rail2.setAttribute("y1", start.y - py);
-                rail2.setAttribute("x2", end.x - px); rail2.setAttribute("y2", end.y - py);
-                rail2.setAttribute("stroke", "#8b4513"); rail2.setAttribute("stroke-width", "4");
-                svg.appendChild(rail2);
-
-                const rungCount = Math.floor(len / 15);
-                for (let i = 1; i < rungCount; i++) {
-                    const t = i / rungCount;
-                    const rx = start.x + dx * t;
-                    const ry = start.y + dy * t;
-                    const rung = createSVGElement("line");
-                    rung.setAttribute("x1", rx + px); rung.setAttribute("y1", ry + py);
-                    rung.setAttribute("x2", rx - px); rung.setAttribute("y2", ry - py);
-                    rung.setAttribute("stroke", "#8b4513"); rung.setAttribute("stroke-width", "3");
-                    svg.appendChild(rung);
+                const px = -Math.sin(angle) * 10; const py = Math.cos(angle) * 10;
+                const r1 = createSVG("line"); r1.setAttribute("x1", start.x + px); r1.setAttribute("y1", start.y + py); r1.setAttribute("x2", end.x + px); r1.setAttribute("y2", end.y + py);
+                r1.setAttribute("stroke", "#8b4513"); r1.setAttribute("stroke-width", "5"); svg.appendChild(r1);
+                const r2 = createSVG("line"); r2.setAttribute("x1", start.x - px); r2.setAttribute("y1", start.y - py); r2.setAttribute("x2", end.x - px); r2.setAttribute("y2", end.y - py);
+                r2.setAttribute("stroke", "#8b4513"); r2.setAttribute("stroke-width", "5"); svg.appendChild(r2);
+                const rungs = 8;
+                for (let i = 1; i < rungs; i++) {
+                    const t = i / rungs; const rx = start.x + dx * t; const ry = start.y + dy * t;
+                    const rung = createSVG("line"); rung.setAttribute("x1", rx + px); rung.setAttribute("y1", ry + py); rung.setAttribute("x2", rx - px); rung.setAttribute("y2", ry - py);
+                    rung.setAttribute("stroke", "#8b4513"); rung.setAttribute("stroke-width", "4"); svg.appendChild(rung);
                 }
             }
 
-            // SNAKES
             for (let [s, e] of Object.entries(SNAKES)) {
-                const headPos = getCellData(s);
-                const tailPos = getCellData(e);
-                if (!headPos || !tailPos) continue;
-                const mx = (headPos.x + tailPos.x) / 2 + (Math.random() * 60 - 30);
-                const my = (headPos.y + tailPos.y) / 2;
-
-                const body = createSVGElement("path");
-                body.setAttribute("d", `M ${headPos.x} ${headPos.y} Q ${mx} ${my} ${tailPos.x} ${tailPos.y}`);
-                body.setAttribute("stroke", "#228b22");
-                body.setAttribute("stroke-width", "12");
-                body.setAttribute("fill", "none");
-                body.setAttribute("stroke-linecap", "round");
+                const head = getCellData(s); const tail = getCellData(e);
+                if (!head || !tail) continue;
+                const dx = tail.x - head.x; const dy = tail.y - head.y;
+                const angle = Math.atan2(dy, dx);
+                const px = -Math.sin(angle); const py = Math.cos(angle);
+                let pathData = `M ${head.x} ${head.y}`;
+                const points = 15;
+                const amp = 15;
+                for (let i = 1; i <= points; i++) {
+                    const t = i / points;
+                    const base_x = head.x + dx * t;
+                    const base_y = head.y + dy * t;
+                    const wave = Math.sin(t * Math.PI * 3) * amp;
+                    const final_x = base_x + px * wave;
+                    const final_y = base_y + py * wave;
+                    pathData += ` L ${final_x} ${final_y}`;
+                }
+                const body = createSVG("path");
+                body.setAttribute("d", pathData);
+                body.setAttribute("stroke", "#15803d"); body.setAttribute("stroke-width", "12");
+                body.setAttribute("fill", "none"); body.setAttribute("stroke-linecap", "round");
                 svg.appendChild(body);
-
-                const head = createSVGElement("circle");
-                head.setAttribute("cx", headPos.x); head.setAttribute("cy", headPos.y);
-                head.setAttribute("r", "10"); head.setAttribute("fill", "#228b22");
-                svg.appendChild(head);
-
-                const eye1 = createSVGElement("circle");
-                eye1.setAttribute("cx", headPos.x - 4); eye1.setAttribute("cy", headPos.y - 2);
-                eye1.setAttribute("r", "2"); eye1.setAttribute("fill", "white");
-                svg.appendChild(eye1);
-
-                const eye2 = createSVGElement("circle");
-                eye2.setAttribute("cx", headPos.x + 4); eye2.setAttribute("cy", headPos.y - 2);
-                eye2.setAttribute("r", "2"); eye2.setAttribute("fill", "white");
-                svg.appendChild(eye2);
-
-                const tongue = createSVGElement("line");
-                tongue.setAttribute("x1", headPos.x); tongue.setAttribute("y1", headPos.y - 8);
-                tongue.setAttribute("x2", headPos.x); tongue.setAttribute("y2", headPos.y - 14);
-                tongue.setAttribute("stroke", "red"); tongue.setAttribute("stroke-width", "2");
-                svg.appendChild(tongue);
+                const h_circ = createSVG("circle");
+                h_circ.setAttribute("cx", head.x); h_circ.setAttribute("cy", head.y); h_circ.setAttribute("r", "10");
+                h_circ.setAttribute("fill", "#15803d"); svg.appendChild(h_circ);
+                const e1 = createSVG("circle"); e1.setAttribute("cx", head.x - 3); e1.setAttribute("cy", head.y - 2); e1.setAttribute("r", "2"); e1.setAttribute("fill", "white"); svg.appendChild(e1);
+                const e2 = createSVG("circle"); e2.setAttribute("cx", head.x + 3); e2.setAttribute("cy", head.y - 2); e2.setAttribute("r", "2"); e2.setAttribute("fill", "white"); svg.appendChild(e2);
             }
         }
 
@@ -599,24 +560,24 @@
                 name: row.querySelector('.player-input').value || `Player ${i+1}`,
                 avatar: row.querySelector('.avatar-select').value,
                 type: row.dataset.type,
-                pos: 1,
-                color: COLORS[i % COLORS.length]
+                pos: 1
             }));
 
             document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('game-screen').style.display = 'block';
-            document.getElementById('game-footer').style.display = 'flex';
-            
+            document.getElementById('game-screen').style.display = 'flex';
             generateBoard();
             
-            const layer = document.getElementById('tokens-layer');
-            layer.innerHTML = '';
+            const layer = document.getElementById('tokens-layer'); layer.innerHTML = '';
             players.forEach((p, i) => {
-                const token = document.createElement('div');
-                token.id = `p${i}`;
-                token.className = 'token';
-                token.innerHTML = `<span class="token-emoji">${p.avatar}</span><span class="token-name">${p.name}</span>`;
-                layer.appendChild(token);
+                const t = document.createElement('div'); t.id = `p${i}`; t.className = 'token';
+                t.innerHTML = `<span class="token-emoji">${p.avatar}</span><span class="token-name">${p.name}</span>`;
+                layer.appendChild(t);
+                
+                const btn = document.getElementById(`roll-btn-${i}`);
+                btn.style.display = 'flex';
+                btn.querySelector('.p-label').textContent = p.name;
+                btn.querySelector('.p-name').textContent = "ROLL DICE";
+                btn.onclick = rollDice;
             });
             
             currentPlayerIndex = 0;
@@ -626,22 +587,28 @@
         };
 
         function updateStatusUI() {
-            const p = players[currentPlayerIndex];
-            const btnRoll = document.getElementById('btn-roll');
+            const activePlayer = players[currentPlayerIndex];
             
-            document.getElementById('status-icon').textContent = p.avatar;
-            document.getElementById('status-icon').style.borderColor = p.color;
-            document.getElementById('status-name').textContent = p.name;
-            document.getElementById('status-name').style.color = p.color;
+            // Update central banner
+            document.getElementById('turn-banner-icon').textContent = activePlayer.avatar;
+            document.getElementById('turn-banner-text').textContent = `${activePlayer.name}'s Turn`;
 
-            // Visual feedback for AI turn
-            if (p.type === 'ai') {
-                btnRoll.disabled = true;
-                btnRoll.textContent = "AI THINKING...";
-            } else {
-                btnRoll.disabled = false;
-                btnRoll.textContent = "ROLL DICE";
-            }
+            players.forEach((p, i) => {
+                const btn = document.getElementById(`roll-btn-${i}`);
+                if (i === currentPlayerIndex) {
+                    btn.classList.add('active');
+                    btn.disabled = p.type === 'ai';
+                    if (p.type === 'ai') {
+                        btn.querySelector('.p-name').textContent = `${p.name} ROLLING...`;
+                    } else {
+                        btn.querySelector('.p-name').textContent = "ROLL DICE";
+                    }
+                } else {
+                    btn.classList.remove('active');
+                    btn.disabled = true;
+                    btn.querySelector('.p-name').textContent = "ROLL DICE";
+                }
+            });
         }
 
         function updateTokenPositions() {
@@ -649,9 +616,9 @@
                 const data = getCellData(p.pos);
                 if (!data) return;
                 const t = document.getElementById(`p${i}`);
-                const overlapOffset = i * 4; 
-                t.style.left = (data.left + overlapOffset) + 'px';
-                t.style.top = (data.top - 12 + overlapOffset) + 'px';
+                const offset = i * 4; 
+                t.style.left = (data.left + offset) + 'px';
+                t.style.top = (data.top - 15 + offset) + 'px';
             });
         }
 
@@ -664,78 +631,72 @@
             const msg = document.getElementById('dice-msg');
             
             overlay.style.display = 'flex';
-            visual.classList.add('dice-shaking');
-            visual.textContent = '🎲';
-            msg.textContent = players[currentPlayerIndex].name + " is rolling...";
+            visual.classList.add('dice-shaking'); visual.textContent = '🎲';
+            msg.textContent = `${players[currentPlayerIndex].name} is rolling...`;
             
             const roll = Math.floor(Math.random() * 6) + 1;
-            
             await new Promise(r => setTimeout(r, 1000));
             
             visual.classList.remove('dice-shaking');
             visual.textContent = DICE_CHARS[roll - 1];
             msg.textContent = `${players[currentPlayerIndex].name} got ${roll}!`;
             
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 1200));
             overlay.style.display = 'none';
             
             await movePlayerSequence(roll);
         }
 
-        document.getElementById('btn-roll').onclick = rollDice;
-
         async function movePlayerSequence(steps) {
             const p = players[currentPlayerIndex];
             
+            if (p.pos + steps > 100) {
+                const overlay = document.getElementById('dice-overlay');
+                const msg = document.getElementById('dice-msg');
+                const visual = document.getElementById('dice-visual');
+                overlay.style.display = 'flex';
+                visual.textContent = '🚫';
+                msg.textContent = `Too high! Need exactly ${100 - p.pos}!`;
+                await new Promise(r => setTimeout(r, 2000));
+                overlay.style.display = 'none';
+                finishTurn();
+                return;
+            }
+
             for (let i = 0; i < steps; i++) {
-                if (p.pos < 100) {
-                    p.pos++;
-                    updateTokenPositions();
-                    await new Promise(r => setTimeout(r, 300));
-                }
+                p.pos++;
+                updateTokenPositions();
+                await new Promise(r => setTimeout(r, 300));
             }
 
             let jumped = false;
-            if (LADDERS[p.pos]) {
-                await new Promise(r => setTimeout(r, 500));
-                p.pos = LADDERS[p.pos];
-                jumped = true;
-            } else if (SNAKES[p.pos]) {
-                await new Promise(r => setTimeout(r, 500));
-                p.pos = SNAKES[p.pos];
-                jumped = true;
-            }
+            if (LADDERS[p.pos]) { await new Promise(r => setTimeout(r, 500)); p.pos = LADDERS[p.pos]; jumped = true; }
+            else if (SNAKES[p.pos]) { await new Promise(r => setTimeout(r, 500)); p.pos = SNAKES[p.pos]; jumped = true; }
 
-            if (jumped) {
-                updateTokenPositions();
-                await new Promise(r => setTimeout(r, 600));
-            }
+            if (jumped) { updateTokenPositions(); await new Promise(r => setTimeout(r, 600)); }
 
             if (p.pos === 100) {
                 document.getElementById('win-text').textContent = `${p.name} Wins!`;
                 document.getElementById('win-overlay').style.display = 'flex';
             } else {
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-                updateStatusUI();
-                isMoving = false;
-                checkAITurn();
+                finishTurn();
             }
+        }
+
+        function finishTurn() {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            updateStatusUI();
+            isMoving = false;
+            checkAITurn();
         }
 
         function checkAITurn() {
             const p = players[currentPlayerIndex];
-            if (p.type === 'ai' && !isMoving) {
-                setTimeout(rollDice, 1800); // Wait after previous turn ends
-            }
+            if (p.type === 'ai' && !isMoving) setTimeout(rollDice, 1800); 
         }
 
         document.getElementById('btn-reload').onclick = () => location.reload();
-        window.onresize = () => {
-            if (players.length > 0) {
-                drawSnakesAndLadders();
-                updateTokenPositions();
-            }
-        };
+        window.onresize = () => { if (players.length > 0) { drawGraphics(); updateTokenPositions(); } };
     </script>
 </body>
 </html>
